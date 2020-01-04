@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+
+<html>
+
+    <head>
+    </head>
+    <body>
+        <script>
+            let map_arr = []
+            let urls = ["rooms/Tiled/2/zone_00.json", "rooms/tileset.json"]
+            let jsons = []
+            
+            let layers = []
+            let result_map = []
+
+            loadJSON(urls, 0, createMaps)
+
+            function loadJSON (urls, index, callback){
+                let request = new XMLHttpRequest()
+                
+                request.addEventListener ("load", function(){
+                    jsons.push(JSON.parse(this.responseText))
+                    if (index++ < urls.length - 1) {
+                        console.log("s")
+                        loadJSON(urls, index, callback)
+                    }
+                    else callback()
+                })
+                request.open("GET", urls[index])
+                request.send()
+
+            }
+
+            function createMaps(){
+                let map = jsons[0] // Json map from Tiled
+                let collision_map = jsons[1] // Collision map from Tiled
+                
+
+                for (let i = 0; i < map.layers.length; i++){
+                    layers.push(map.layers[i].data) // Pushing all layers to array
+                }
+
+                result_map = new Array(layers[0].length).fill(0) // Collision map
+                
+                let b1 = 0, b2 = 0
+                for (let i = 0; i < layers.length; i++){
+                    let layer = layers[i]
+                    for (let j = 0; j < layer.length; j++){
+                        b1 = result_map[j]
+                        if(collision_map.tiles[layer[j] - 1])
+                            b2 = collision_map.tiles[layer[j] - 1].properties[0].value
+                        else
+                            b2 = 0
+                        
+                        result_map[j] = (b1 | b2)
+                    }
+                }
+
+                let x = document.createElement("textarea");
+                x.setAttribute("type", "text");
+                x.setAttribute("style", "width: 200px; height: 100px");
+                x.value = SplitText(result_map);
+                x.rows = 100
+                x.cols = 5
+                document.body.appendChild(x)
+                
+                for (let i = 0; i < layers.length; i++){
+                    // document.body.innerHTML += "Layer: " + i
+                    let x2 = document.createElement("textarea");
+                    // x2.setAttribute("type", "text");
+                    x2.setAttribute("style", "width: 200px; height: 100px");
+                    // x2.setAttribute("value", "sd");
+                    x2.value = SplitText(layers[i])
+                    x2.rows = 100
+                    x2.cols = 5
+                    document.body.appendChild(x2)
+                }
+            }
+            
+            function SplitText(arr){
+                // let result = arr.join(", ")
+                for (let i = arr.length; i > 0; i -= 64){
+                    arr.splice(i, 0, "\n")
+                }
+                // return arr
+                let result = arr.join(",").split("\n,").join("\n")
+                return result.substring(0, result.length - 2)
+            }
+            
+        </script>
+    </body>
+
+</html>
+
+
